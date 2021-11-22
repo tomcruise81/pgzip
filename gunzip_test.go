@@ -11,7 +11,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"runtime/pprof"
 	"strings"
 	"testing"
 	"time"
@@ -384,42 +383,6 @@ func TestDecompressorReset(t *testing.T) {
 		s = b.String()
 		if s != tt.raw {
 			t.Errorf("%s: got %d-byte %q want %d-byte %q", tt.name, n, s, len(tt.raw), tt.raw)
-		}
-	}
-}
-
-func TestDecompressorResetNoRead(t *testing.T) {
-	done := make(chan struct{})
-	defer close(done)
-	go func() {
-		select {
-		// Typical runtime is 2-3s, so we add an order of magnitude.
-		case <-time.After(30 * time.Second):
-			pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
-		case <-done:
-		}
-	}()
-	in, err := ioutil.ReadFile("testdata/bigempty.gz")
-	if err != nil {
-		t.Fatal(err)
-	}
-	gz, err := NewReader(bytes.NewBuffer(in))
-	if err != nil {
-		t.Fatal(err)
-	}
-	for i := 0; i < 100; i++ {
-		if testing.Short() && i > 10 {
-			break
-		}
-		err := gz.Reset(bytes.NewBuffer(in))
-		if err != nil {
-			t.Fatal(i, err)
-		}
-		// Read 100KB, ignore the rest
-		lr := io.LimitedReader{N: 100 << 10, R: gz}
-		_, err = io.Copy(ioutil.Discard, &lr)
-		if err != nil {
-			t.Fatal(i, err)
 		}
 	}
 }
