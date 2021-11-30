@@ -23,7 +23,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/klauspost/compress/flate"
+	"github.com/tomcruise81/compress/flate"
 )
 
 const (
